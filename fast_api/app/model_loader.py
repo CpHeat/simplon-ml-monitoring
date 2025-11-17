@@ -4,9 +4,7 @@ from pathlib import Path
 
 # Point d'accès racine du projet
 app_path = Path(__file__).resolve().parent  # Remonte au dossier fast_api/
-print("-------------------------------")
-print(app_path)
-print("-------------------------------")
+
 # Chemins absolus
 MODEL_DIR = app_path / "models"  # fast_api/models/
 MODEL_ML_PATH = MODEL_DIR / "ml_model.pkl"
