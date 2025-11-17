@@ -1,2 +1,10 @@
+<<<<<<< HEAD
 fastapi[standard]
 numpy
+=======
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+>>>>>>> dev
