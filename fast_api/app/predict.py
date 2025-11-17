@@ -27,8 +27,8 @@ class Predict:
             
             return {
                 "prediction": int(prediction),  # 0=décès, 1=survie
-                "probability_survive": float(proba[1]),
-                "probability_death": float(proba[0]),
+                "probability_survive": float(proba[0]),
+                "probability_death": float(proba[1]),
                 "model": model,
                 "input_data": data
             }
