@@ -1,7 +1,8 @@
 # app/predict.py
 import asyncio
 import numpy as np
-from app.model_loader import model_titanic_ml, scaler_X_titanic_ml,scaler_X_titanic_dl,model_titanic_dl,le_sex,le_embarked 
+import pandas as pd
+from app.model_loader import (model_titanic_ml, scaler_X_titanic_ml,scaler_X_titanic_dl,model_titanic_dl,le_sex,le_embarked,unemployment_pipeline)
 
 class Predict:
     async def predict_survive_ml(self, data: dict, genre: str,pclass: int,age: int):
@@ -106,3 +107,57 @@ class Predict:
             import traceback
             traceback.print_exc()
             raise ValueError("Erreur interne lors de la prédiction DL.")
+        
+    # ===== XGBoost Unemployment =====
+    async def predict_unemployment(
+        self, 
+        country: str,
+        agriculture: float,
+        industry: float,
+        services: float,
+        gdp_log: float,
+        year: int
+    ):
+        """Prédire le taux de chômage"""
+        
+        print(f"Prédiction chômage pour {country} en {year}")
+        
+        def _predict():
+            # Créer un DataFrame avec les features dans le bon ordre
+            input_data = pd.DataFrame({
+                'agriculture': [agriculture],
+                'industry': [industry],
+                'services': [services],
+                'gdp_log': [gdp_log],
+                'year': [year],
+                'country': [country]
+            })
+            
+            print(f"Input DataFrame:\n{input_data}")
+            
+            # Le pipeline gère automatiquement :
+            # 1. L'encodage de 'country' (OneHotEncoder ou LabelEncoder)
+            # 2. Le scaling des features numériques
+            # 3. La prédiction XGBoost
+            prediction = unemployment_pipeline.predict(input_data)[0]
+            
+            return {
+                "predicted_unemployment_rate": float(prediction),
+                "input_data": {
+                    "country": country,
+                    "agriculture": agriculture,
+                    "industry": industry,
+                    "services": services,
+                    "gdp_log": gdp_log,
+                    "year": year
+                },
+                "model": "XGBoost Pipeline"
+            }
+        
+        try:
+            return await asyncio.to_thread(_predict)
+        except Exception as e:
+            print(f"Erreur dans predict_unemployment: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise ValueError(f"Erreur interne lors de la prédiction: {str(e)}")
