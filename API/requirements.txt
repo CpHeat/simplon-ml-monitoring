@@ -3,3 +3,4 @@ joblib
 numpy
 scikit-learn
 prometheus_fastapi_instrumentator
+tensorflow
