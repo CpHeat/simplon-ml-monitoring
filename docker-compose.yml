@@ -2,14 +2,14 @@ services:
 
   fastapi:
     build:
-      context: ./fast_api
+      context: ./API
       dockerfile: Dockerfile
     container_name: fastapi
     ports:
       - 8000:8000
     restart: unless-stopped
     volumes:
-      - ./fast_api/app:/app/app
+      - ./API/app:/app/app
   prometheus:
     image: prom/prometheus
     container_name: prometheus

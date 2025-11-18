@@ -1,9 +1,5 @@
-numpy
-pandas
-matplotlib
-seaborn
-scikit-learn
 fastapi[standard]
 joblib
-tensorflow
+numpy
+scikit-learn
 prometheus_fastapi_instrumentator
