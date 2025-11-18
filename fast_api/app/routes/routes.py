@@ -19,3 +19,19 @@ async def predict_ml(data: InputMachine):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/dl", summary="Prédiction DL - Survie Titanic")
+async def predict_dl(data: InputDeep):
+    try:
+        result = await predictor.predict_survive_dl(
+            data=data.dict(),
+            genre=data.genre,
+            pclass=data.pclass,
+            age=data.age,
+            embarked=data.embarked
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
