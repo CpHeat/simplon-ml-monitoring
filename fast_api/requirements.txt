@@ -1,4 +1,0 @@
-fastapi[standard]
-joblib
-numpy
-scikit-learn
