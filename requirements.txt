@@ -7,3 +7,4 @@ fastapi[standard]
 joblib
 tensorflow
 xgboost 
+prometheus_fastapi_instrumentator
