@@ -1,4 +1,14 @@
 services:
+  fastapi:
+    build:
+      context: ./fast_api
+      dockerfile: Dockerfile
+    container_name: fastapi
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    volumes:
+      - ./fast_api/app:/app/app
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -10,6 +20,8 @@ services:
     volumes:
       - ./MONITORING/prometheus:/etc/prometheus
       - prom_data:/prometheus
+    depends_on:
+      - fastapi
   grafana:
     image: grafana/grafana
     container_name: grafana
@@ -17,8 +29,8 @@ services:
       - 3000:3000
     restart: unless-stopped
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=grafana
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - ./MONITORING/grafana:/etc/grafana/provisioning/datasources
 volumes:
