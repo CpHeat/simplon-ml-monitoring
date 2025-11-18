@@ -4,21 +4,25 @@ import numpy as np
 from app.model_loader import model_titanic_ml, scaler_X_titanic_ml
 
 class Predict:
-    async def predict_survive_ml(self, data: dict, genre: str):
+    async def predict_survive_ml(self, data: dict, genre: str,pclass: int,age: int):
         genre = genre.lower()
         if genre not in ["homme", "femme"]:
             raise ValueError(f"Genre inconnu : {genre} (seules 'homme' et 'femme' sont autorisées)")
-        
+        if pclass not in [1,2,3]:
+            raise ValueError(f"pclasse inconnu : {genre} (seules '1','2','3' sont autorisées)")
+
         print(f"Données reçues: {data}")
         model = "LogisticRegression"
         
         possible_features = {
-            "sex": 1 if genre == "femme" else 0,  # ✅ Encodage correct : femme=1, homme=0
+            "sex": 1 if genre == "femme" else 0,  # Encodage correct : femme=1, homme=0
+            "pclass": pclass,
+            "age":age
         }
         
         def _predict():
             nonlocal model
-            feature_to_use = ["sex"]
+            feature_to_use = ["sex","pclass","age"]
             X = np.array([possible_features[feature] for feature in feature_to_use]).reshape(1, -1)
             print(f"Features Titanic ({feature_to_use}) - Shape: {X.shape}, Valeurs: {X}")
             X_scaled = scaler_X_titanic_ml.transform(X)
@@ -27,8 +31,8 @@ class Predict:
             
             return {
                 "prediction": int(prediction),  # 0=décès, 1=survie
-                "probability_survive": float(proba[0]),
-                "probability_death": float(proba[1]),
+                "probability_survive": float(proba[1]),
+                "probability_death": float(proba[0]),
                 "model": model,
                 "input_data": data
             }

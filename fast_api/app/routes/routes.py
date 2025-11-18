@@ -10,7 +10,9 @@ async def predict_ml(data: InputMachine):
     try:
         result = await predictor.predict_survive_ml(
             data=data.dict(),
-            genre=data.genre
+            genre=data.genre,
+            pclass=data.pclass,
+            age=data.age
         )
         return result
     except ValueError as e:
