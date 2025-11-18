@@ -1,4 +1,5 @@
 services:
+
   fastapi:
     build:
       context: ./API
@@ -14,14 +15,32 @@ services:
     container_name: prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     ports:
       - 9090:9090
     restart: unless-stopped
     volumes:
       - ./MONITORING/prometheus:/etc/prometheus
-      - prom_data:/prometheus
+      - prometheus_data:/prometheus
     depends_on:
       - fastapi
+      - cadvisor
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    restart: unless-stopped
+
   grafana:
     image: grafana/grafana
     container_name: grafana
@@ -33,5 +52,15 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - ./MONITORING/grafana:/etc/grafana/provisioning/datasources
+
+  evidently:
+    image: evidently/evidently-service:latest
+    container_name: evidently-ui
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./MONITORING/evidently/data:/app/workspace
+    restart: unless-stopped
+      
 volumes:
-  prom_data:
+  prometheus_data:
