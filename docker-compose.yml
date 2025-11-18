@@ -20,8 +20,8 @@ services:
       - 9090:9090
     restart: unless-stopped
     volumes:
-      - ./MONITORING/prometheus/config:/etc/prometheus
-      - ./MONITORING/prometheus/data:/prometheus
+      - ./MONITORING/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
     depends_on:
       - fastapi
       - cadvisor
