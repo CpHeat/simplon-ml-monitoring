@@ -5,8 +5,11 @@ WORKDIR /app
 # Copier le fichier requirements.txt
 COPY ../requirements.txt .
 
-# Installer les dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances avec permissions appropriées
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Ajouter les binaires utilisateur au PATH
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Copier le code de l'application
 COPY ./app /app/app

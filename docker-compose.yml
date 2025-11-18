@@ -20,8 +20,8 @@ services:
       - 9090:9090
     restart: unless-stopped
     volumes:
-      - ./MONITORING/prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
+      - ./MONITORING/prometheus/config:/etc/prometheus
+      - ./MONITORING/prometheus/data:/prometheus
     depends_on:
       - fastapi
       - cadvisor
@@ -51,7 +51,8 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
-      - ./MONITORING/grafana:/etc/grafana/provisioning/datasources
+      - ./MONITORING/grafana/config:/etc/grafana/provisioning/datasources
+      - ./MONITORING/grafana/data:/var/lib/grafana
 
   evidently:
     image: evidently/evidently-service:latest
