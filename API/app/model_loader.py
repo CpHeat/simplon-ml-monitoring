@@ -15,6 +15,9 @@ SCALER_DL_PATH = MODEL_DIR / "dl_scaler.pkl"
 LE_SEX_PATH = MODEL_DIR / "dl_le_sex.pkl"
 LE_EMBARKED_PATH = MODEL_DIR / "dl_le_embarked.pkl"
 
+# ===== XGBoost (Unemployment) =====
+MODEL_UNEMPLOYMENT_PATH = MODEL_DIR / "modele_xgboost_pipeline.joblib"
+
 # Vérification
 if not MODEL_ML_PATH.exists():
     raise FileNotFoundError(f" Fichier introuvable : {MODEL_ML_PATH}")
@@ -31,6 +34,9 @@ if not LE_SEX_PATH.exists():
 if not LE_EMBARKED_PATH.exists():
     raise FileNotFoundError(f"Fichier introuvable : {LE_EMBARKED_PATH}")
 
+if not MODEL_UNEMPLOYMENT_PATH.exists():
+    raise FileNotFoundError(f" Fichier introuvable : {MODEL_UNEMPLOYMENT_PATH}")
+
 # Chargement ML
 model_titanic_ml = load(MODEL_ML_PATH)
 scaler_X_titanic_ml = load(SCALER_ML_PATH)
@@ -40,3 +46,6 @@ model_titanic_dl = keras.models.load_model(MODEL_DL_PATH)
 scaler_X_titanic_dl = load(SCALER_DL_PATH)
 le_sex = load(LE_SEX_PATH)
 le_embarked = load(LE_EMBARKED_PATH)
+
+# Charger
+unemployment_pipeline = load(MODEL_UNEMPLOYMENT_PATH)
