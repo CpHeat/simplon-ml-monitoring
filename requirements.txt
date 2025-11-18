@@ -3,5 +3,6 @@ pandas
 matplotlib
 seaborn
 scikit-learn
-tensorflow
 fastapi[standard]
+joblib
+tensorflow
