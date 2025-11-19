@@ -5,7 +5,7 @@ from app.predict import Predict
 router = APIRouter(prefix="/predict")
 predictor = Predict()
 
-@router.post("/ml")
+@router.post("/titanic_ml", summary="Prédiction Machine Learning - Survie Titanic")
 async def predict_ml(data: InputMachine):
     try:
         result = await predictor.predict_survive_ml(
@@ -20,7 +20,7 @@ async def predict_ml(data: InputMachine):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.post("/dl", summary="Prédiction DL - Survie Titanic")
+@router.post("/titanic_dl", summary="Prédiction Deep Learning - Survie Titanic")
 async def predict_dl(data: InputDeep):
     try:
         result = await predictor.predict_survive_dl(
