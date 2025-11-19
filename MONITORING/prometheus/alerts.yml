@@ -1,0 +1,80 @@
+groups:
+  - name: ml_drift_alerts
+    interval: 60s
+    rules:
+      # Alerte si drift détecté sur un modèle
+      - alert: DataDriftDetected
+        expr: ml_dataset_drift_detected == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_monitoring
+        annotations:
+          summary: "Data drift détecté sur {{ $labels.model }}"
+          description: "Le modèle {{ $labels.model }} a un drift détecté sur ses features d'entrée."
+
+      # Alerte si trop de features driftées
+      - alert: HighDriftShare
+        expr: ml_drift_share > 0.3
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_monitoring
+        annotations:
+          summary: "Drift élevé sur {{ $labels.model }} ({{ $value | humanizePercentage }})"
+          description: "Plus de 30% des features ont drifté sur le modèle {{ $labels.model }}."
+
+      # Alerte si drift critique (>50% features)
+      - alert: CriticalDriftShare
+        expr: ml_drift_share > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          component: ml_monitoring
+        annotations:
+          summary: "CRITIQUE: Drift majeur sur {{ $labels.model }} ({{ $value | humanizePercentage }})"
+          description: "Plus de 50% des features ont drifté. Le modèle {{ $labels.model }} nécessite un réentraînement urgent."
+
+      # Alerte si accuracy chute (Titanic uniquement)
+      - alert: ModelAccuracyDrop
+        expr: ml_model_accuracy{model=~"titanic.*"} < 0.7
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_monitoring
+        annotations:
+          summary: "Accuracy en baisse sur {{ $labels.model }} ({{ $value | humanizePercentage }})"
+          description: "L'accuracy du modèle {{ $labels.model }} est tombée sous 70%. Concept drift possible."
+
+      # Alerte si accuracy critique
+      - alert: ModelAccuracyCritical
+        expr: ml_model_accuracy{model=~"titanic.*"} < 0.6
+        for: 10m
+        labels:
+          severity: critical
+          component: ml_monitoring
+        annotations:
+          summary: "CRITIQUE: Accuracy très faible sur {{ $labels.model }} ({{ $value | humanizePercentage }})"
+          description: "L'accuracy est sous 60%. Le modèle {{ $labels.model }} doit être réentraîné immédiatement."
+
+      # Alerte si pas de prédictions depuis longtemps
+      - alert: NoPredictionsReceived
+        expr: ml_predictions_count_last_period == 0
+        for: 6h
+        labels:
+          severity: info
+          component: ml_monitoring
+        annotations:
+          summary: "Aucune prédiction sur {{ $labels.model }}"
+          description: "Le modèle {{ $labels.model }} n'a reçu aucune prédiction dans les 6 dernières heures."
+
+      # Alerte si le service de monitoring ne répond plus
+      - alert: DriftMonitoringDown
+        expr: up{job="drift-monitor"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Service de monitoring de drift down"
+          description: "Le service drift-monitor ne répond plus depuis 5 minutes."

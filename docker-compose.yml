@@ -10,6 +10,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./API/app:/app/app
+      - ./MONITORING/evidently/data:/app/data
+    environment:
+      - DB_PATH=/app/data/predictions.db
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -62,6 +65,29 @@ services:
     volumes:
       - ./MONITORING/evidently/data:/app/workspace
     restart: unless-stopped
-      
+
+  drift-monitor:
+    build:
+      context: .
+      dockerfile: ./MONITORING/evidently/service/Dockerfile
+    container_name: drift-monitor
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+    volumes:
+      # Base de données partagée avec fastapi
+      - ./MONITORING/evidently/data:/app/data
+      # Datasets de référence
+      - ./MONITORING/evidently/reference_data:/app/reference_data
+      # Rapports générés
+      - ./MONITORING/evidently/reports:/app/reports
+      # Logs
+      - ./MONITORING/evidently/logs:/app/logs
+    depends_on:
+      - fastapi
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_PATH=/app/data/predictions.db
+
 volumes:
   prometheus_data:
