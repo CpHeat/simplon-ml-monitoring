@@ -5,6 +5,7 @@ class InputMachine(BaseModel):
     genre : Literal["homme", "femme"]
     pclass : int = Field(..., ge=1, le=3)
     age : float = Field(..., ge=0, le=80)
+    true_label: Optional[int] = Field(None, ge=0, le=1, description="Vrai label si connu (0=décès, 1=survie) - optionnel pour monitoring")
 
 class InputDeep(BaseModel):
     """Input pour Deep Learning (plus de features)"""
@@ -12,6 +13,7 @@ class InputDeep(BaseModel):
     pclass: int = Field(..., ge=1, le=3)
     age: int = Field(..., ge=0, le=80)
     embarked: Literal["C", "Q", "S"] = Field(..., description="Port d'embarquement")
+    true_label: Optional[int] = Field(None, ge=0, le=1, description="Vrai label si connu (0=décès, 1=survie) - optionnel pour monitoring")
 
 # ===== Unemployment Schema =====
 class InputUnemployment(BaseModel):

@@ -10,6 +10,9 @@ alerting:
     scheme: http
     timeout: 10s
     api_version: v2
+
+rule_files:
+  - 'alerts.yml'
     
 scrape_configs:
 - job_name: prometheus
@@ -28,3 +31,8 @@ scrape_configs:
   static_configs:
     - targets: ['fastapi:8000']
   metrics_path: '/metrics'
+- job_name: 'drift-monitor'
+  static_configs:
+    - targets: ['drift-monitor:8002']
+  metrics_path: '/metrics'
+  scrape_interval: 60s  # Scrape toutes les minutes (drift change lentement)

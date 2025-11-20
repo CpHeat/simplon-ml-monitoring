@@ -6,3 +6,7 @@ prometheus_fastapi_instrumentator
 tensorflow
 xgboost
 pandas
+evidently
+sqlalchemy
+apscheduler
+prometheus-client
