@@ -4,4 +4,3 @@ __pycache__/
 
 # Monitoring data - ignore everything except specific files
 MONITORING/grafana/data/*
-!MONITORING/grafana/data/grafana.db
