@@ -1,6 +1,4 @@
 .venv
 .env
 __pycache__/
-
-# Monitoring data - ignore everything except specific files
 MONITORING/grafana/data/*
