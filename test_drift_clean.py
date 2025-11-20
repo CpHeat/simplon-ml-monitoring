@@ -1,26 +1,87 @@
 """
 Script de test pour valider le système de drift monitoring.
-Génère des données qui suivent la distribution de référence (pas de drift).
+Utilise des vraies données du dataset Titanic pour avoir des true_labels connus.
 """
 import requests
 import time
 import random
 import numpy as np
+import pandas as pd
 from datetime import datetime
 
 API_URL = "http://localhost:8000"
 
+# Charger le vrai dataset Titanic au démarrage
+try:
+    TITANIC_DATA = pd.read_csv('ML/data/titanic.csv')
+    # Nettoyer les données manquantes
+    TITANIC_DATA = TITANIC_DATA.dropna(subset=['Age', 'Sex', 'Pclass', 'Survived', 'Embarked'])
+    print(f"[INFO] Loaded Titanic dataset: {len(TITANIC_DATA)} valid rows")
+except Exception as e:
+    print(f"[WARNING] Could not load Titanic dataset: {e}")
+    TITANIC_DATA = None
+
+def find_closest_passenger(sex, pclass, age):
+    """
+    Trouve les passagers les plus proches dans le dataset réel.
+    Si plusieurs passagers ont le même âge (exact ou le plus proche),
+    calcule la moyenne de leur survie pour déterminer le true_label.
+    Retourne 1 si moyenne >= 0.5, sinon 0.
+    """
+    if TITANIC_DATA is None:
+        # Fallback : estimation simple si dataset non chargé
+        survive_prob = 0.38
+        if sex == "femme":
+            survive_prob += 0.4
+        if pclass == 1:
+            survive_prob += 0.2
+        elif pclass == 3:
+            survive_prob -= 0.2
+        return 1 if random.random() < survive_prob else 0
+
+    # Convertir le sexe au format du dataset
+    sex_orig = 'female' if sex == 'femme' else 'male'
+
+    # Filtrer par sexe et classe (critères catégoriels exacts)
+    candidates = TITANIC_DATA[
+        (TITANIC_DATA['Sex'] == sex_orig) &
+        (TITANIC_DATA['Pclass'] == pclass)
+    ]
+
+    if len(candidates) == 0:
+        # Si aucun candidat, relâcher la contrainte de classe
+        candidates = TITANIC_DATA[TITANIC_DATA['Sex'] == sex_orig]
+
+    if len(candidates) == 0:
+        # Dernier recours : tout le dataset
+        candidates = TITANIC_DATA
+
+    # Trouver l'âge le plus proche
+    candidates = candidates.copy()  # Éviter SettingWithCopyWarning
+    candidates['age_diff'] = abs(candidates['Age'] - age)
+    min_age_diff = candidates['age_diff'].min()
+
+    # Sélectionner TOUS les passagers ayant cet âge le plus proche
+    closest_passengers = candidates[candidates['age_diff'] == min_age_diff]
+
+    # Calculer la moyenne de survie
+    survival_mean = closest_passengers['Survived'].mean()
+
+    # Retourner 1 si moyenne >= 0.5, sinon 0
+    return 1 if survival_mean >= 0.5 else 0
+
 def generate_normal_titanic_ml(n=20):
     """
     Génère des prédictions Titanic ML qui SUIVENT la distribution de référence.
-    Basé sur les statistiques du dataset Titanic original.
+    Inputs : générés selon les distributions réelles
+    True labels : extraits du passager le plus proche dans le dataset
     """
     print(f"\n[NORMAL DATA] Generating {n} Titanic ML predictions (no drift expected)...")
     print("  Distribution basée sur le dataset de référence")
 
     for i in range(n):
-        # Distribution réaliste du Titanic
-        # sex: 65% homme (0), 35% femme (1)
+        # Générer des inputs selon les distributions réelles
+        # sex: 65% homme, 35% femme
         sex = random.choices(["homme", "femme"], weights=[65, 35])[0]
 
         # pclass: 55% classe 3, 21% classe 2, 24% classe 1
@@ -29,17 +90,8 @@ def generate_normal_titanic_ml(n=20):
         # age: Distribution normale, moyenne ~30 ans, écart-type ~14
         age = max(0, min(80, np.random.normal(30, 14)))
 
-        # Simuler le vrai label basé sur des règles simplifiées
-        # (femmes et classe 1 survivent plus)
-        survive_prob = 0.38  # Taux de survie global ~38%
-        if sex == "femme":
-            survive_prob += 0.4
-        if pclass == 1:
-            survive_prob += 0.2
-        elif pclass == 3:
-            survive_prob -= 0.2
-
-        true_label = 1 if random.random() < survive_prob else 0
+        # Trouver le true_label du passager le plus proche dans le dataset
+        true_label = find_closest_passenger(sex, pclass, age)
 
         data = {
             "genre": sex,
@@ -64,10 +116,15 @@ def generate_normal_titanic_ml(n=20):
     print(f"  → {n} prédictions normales générées")
 
 def generate_normal_titanic_dl(n=15):
-    """Génère des prédictions Titanic DL normales"""
+    """
+    Génère des prédictions Titanic DL qui SUIVENT la distribution de référence.
+    Inputs : générés selon les distributions réelles
+    True labels : extraits du passager le plus proche dans le dataset
+    """
     print(f"\n[NORMAL DATA] Generating {n} Titanic DL predictions (no drift expected)...")
 
     for i in range(n):
+        # Générer des inputs selon les distributions réelles
         sex = random.choices(["homme", "femme"], weights=[65, 35])[0]
         pclass = random.choices([1, 2, 3], weights=[24, 21, 55])[0]
         age = int(max(0, min(80, np.random.normal(30, 14))))
@@ -75,16 +132,8 @@ def generate_normal_titanic_dl(n=15):
         # embarked: 72% S, 19% C, 9% Q (distribution réelle Titanic)
         embarked = random.choices(["S", "C", "Q"], weights=[72, 19, 9])[0]
 
-        # Vrai label
-        survive_prob = 0.38
-        if sex == "femme":
-            survive_prob += 0.4
-        if pclass == 1:
-            survive_prob += 0.2
-        elif pclass == 3:
-            survive_prob -= 0.2
-
-        true_label = 1 if random.random() < survive_prob else 0
+        # Trouver le true_label du passager le plus proche
+        true_label = find_closest_passenger(sex, pclass, age)
 
         data = {
             "genre": sex,
@@ -99,7 +148,7 @@ def generate_normal_titanic_dl(n=15):
             if response.status_code == 200:
                 result = response.json()
                 status = "✓" if result['prediction'] == true_label else "✗"
-                print(f"  {status} {i+1}/{n}: {sex[:1].upper()}, class {pclass}, age {age}, port {embarked}")
+                print(f"  {status} {i+1}/{n}: {sex[:1].upper()}, class {pclass}, age {age}, port {embarked} → pred={result['prediction']}, true={true_label}")
             else:
                 print(f"  ✗ Error {response.status_code}")
         except Exception as e:
@@ -165,25 +214,36 @@ def generate_normal_unemployment(n=15):
 
 def generate_drifted_titanic_ml(n=20):
     """
-    Génère des prédictions avec DRIFT VOLONTAIRE
+    Génère des prédictions avec DRIFT VOLONTAIRE.
     → Seulement des femmes de 1ère classe, jeunes
+    Inputs : générés avec distribution biaisée (drift)
+    True labels : extraits du passager le plus proche dans le dataset
     """
     print(f"\n[DRIFT DATA] Generating {n} Titanic ML predictions (DRIFT expected)...")
     print("  🚨 Distribution anormale : 100% femmes, 100% classe 1, âge < 30")
 
     for i in range(n):
+        # Générer des inputs avec DRIFT volontaire
+        sex = "femme"  # 100% femmes (vs 35% référence) → DRIFT!
+        pclass = 1      # 100% classe 1 (vs 24% référence) → DRIFT!
+        age = float(random.uniform(18, 30))  # Jeunes seulement → DRIFT!
+
+        # Trouver le true_label du passager le plus proche
+        true_label = find_closest_passenger(sex, pclass, age)
+
         data = {
-            "genre": "femme",  # 100% femmes (vs 35% référence) → DRIFT!
-            "pclass": 1,        # 100% classe 1 (vs 24% référence) → DRIFT!
-            "age": float(random.uniform(18, 30)),  # Jeunes seulement → DRIFT!
-            "true_label": 1  # La plupart survivent
+            "genre": sex,
+            "pclass": pclass,
+            "age": age,
+            "true_label": true_label
         }
 
         try:
             response = requests.post(f"{API_URL}/predict/titanic_ml", json=data)
             if response.status_code == 200:
                 result = response.json()
-                print(f"  🔴 {i+1}/{n}: F, class 1, age {data['age']:.0f} → pred={result['prediction']}")
+                status = "✓" if result['prediction'] == true_label else "✗"
+                print(f"  {status} 🔴 {i+1}/{n}: F, class {pclass}, age {age:.0f} → pred={result['prediction']}, true={true_label}")
             else:
                 print(f"  ✗ Error {response.status_code}")
         except Exception as e:

@@ -39,6 +39,26 @@ drifted_columns_count = Gauge(
     ['model']
 )
 
+# Feature-level drift detection
+feature_drift_detected = Gauge(
+    'ml_feature_drift_detected',
+    'Whether drift was detected for a specific feature (1=yes, 0=no)',
+    ['model', 'feature']
+)
+
+feature_drift_score = Gauge(
+    'ml_feature_drift_score',
+    'Drift score for a specific feature (p-value or distance metric)',
+    ['model', 'feature']
+)
+
+# Target drift detection
+target_drift_detected = Gauge(
+    'ml_target_drift_detected',
+    'Whether target drift was detected (1=yes, 0=no)',
+    ['model']
+)
+
 # Performance metrics (pour Titanic seulement)
 model_accuracy = Gauge(
     'ml_model_accuracy',
@@ -46,9 +66,52 @@ model_accuracy = Gauge(
     ['model']
 )
 
+model_precision = Gauge(
+    'ml_model_precision',
+    'Model precision (TP / (TP + FP))',
+    ['model']
+)
+
+model_recall = Gauge(
+    'ml_model_recall',
+    'Model recall (TP / (TP + FN))',
+    ['model']
+)
+
+model_f1_score = Gauge(
+    'ml_model_f1_score',
+    'Model F1 score (harmonic mean of precision and recall)',
+    ['model']
+)
+
 samples_with_labels = Gauge(
     'ml_samples_with_labels',
     'Number of samples with true labels available',
+    ['model']
+)
+
+# Confusion Matrix metrics
+model_true_positives = Gauge(
+    'ml_model_true_positives',
+    'Number of true positives',
+    ['model']
+)
+
+model_true_negatives = Gauge(
+    'ml_model_true_negatives',
+    'Number of true negatives',
+    ['model']
+)
+
+model_false_positives = Gauge(
+    'ml_model_false_positives',
+    'Number of false positives',
+    ['model']
+)
+
+model_false_negatives = Gauge(
+    'ml_model_false_negatives',
+    'Number of false negatives',
     ['model']
 )
 
@@ -122,6 +185,27 @@ class DriftScheduler:
                 metrics.get('number_of_drifted_columns', 0)
             )
 
+            # Feature-level drift metrics
+            if 'feature_drift_details' in metrics:
+                for feature_name, feature_info in metrics['feature_drift_details'].items():
+                    feature_drift_detected.labels(
+                        model=model_name,
+                        feature=feature_name
+                    ).set(1 if feature_info.get('drift_detected', False) else 0)
+
+                    # Set drift score (p-value or drift score)
+                    drift_score = feature_info.get('drift_score', 1.0)
+                    feature_drift_score.labels(
+                        model=model_name,
+                        feature=feature_name
+                    ).set(drift_score)
+
+            # Target drift
+            if 'target_drift_detected' in metrics:
+                target_drift_detected.labels(model=model_name).set(
+                    1 if metrics['target_drift_detected'] else 0
+                )
+
             # Predictions count
             predictions_count.labels(model=model_name).set(
                 metrics.get('count', 0)
@@ -134,6 +218,38 @@ class DriftScheduler:
                 )
                 samples_with_labels.labels(model=model_name).set(
                     metrics.get('samples_with_labels', 0)
+                )
+
+            # Precision, Recall, F1 Score
+            if 'precision' in metrics:
+                model_precision.labels(model=model_name).set(
+                    metrics['precision']
+                )
+            if 'recall' in metrics:
+                model_recall.labels(model=model_name).set(
+                    metrics['recall']
+                )
+            if 'f1_score' in metrics:
+                model_f1_score.labels(model=model_name).set(
+                    metrics['f1_score']
+                )
+
+            # Confusion Matrix
+            if 'true_positives' in metrics:
+                model_true_positives.labels(model=model_name).set(
+                    metrics['true_positives']
+                )
+            if 'true_negatives' in metrics:
+                model_true_negatives.labels(model=model_name).set(
+                    metrics['true_negatives']
+                )
+            if 'false_positives' in metrics:
+                model_false_positives.labels(model=model_name).set(
+                    metrics['false_positives']
+                )
+            if 'false_negatives' in metrics:
+                model_false_negatives.labels(model=model_name).set(
+                    metrics['false_negatives']
                 )
 
             # Last run timestamp
