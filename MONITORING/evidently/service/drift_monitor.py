@@ -322,8 +322,8 @@ class DriftMonitor:
                             if drift_detected:
                                 metrics['drifted_features'].append(column_name)
 
-                # Détecter le target drift (si la colonne "survived" ou "target" drifte)
-                elif 'TargetDrift' in metric_name or ('ValueDrift' in metric_name and 'survived' in metric_name.lower()):
+                # Détecter le target drift (si la colonne "survived", "unemployment_rate" ou "target" drifte)
+                elif 'TargetDrift' in metric_name or ('ValueDrift' in metric_name and ('survived' in metric_name.lower() or 'unemployment_rate' in metric_name.lower())):
                     value = metric.get('value', {})
                     if isinstance(value, dict):
                         metrics['target_drift_detected'] = value.get('drift_detected', False)
@@ -332,6 +332,20 @@ class DriftMonitor:
 
         except Exception as e:
             print(f"  [WARNING] Error extracting metrics: {e}")
+
+        # Recalculer le drift_share en excluant le target
+        # feature_drift_details contient SEULEMENT les features (pas le target)
+        if metrics['feature_drift_details']:
+            total_features = len(metrics['feature_drift_details'])
+            drifted_features_count = sum(1 for info in metrics['feature_drift_details'].values() if info.get('drift_detected', False))
+
+            if total_features > 0:
+                # Recalculer le drift share basé SEULEMENT sur les features
+                metrics['drift_share'] = drifted_features_count / total_features
+                metrics['number_of_drifted_columns'] = drifted_features_count
+                metrics['dataset_drift_detected'] = metrics['drift_share'] > 0.5
+
+                print(f"  [DRIFT RECALC] {drifted_features_count}/{total_features} features drifted ({metrics['drift_share']:.2%})")
 
         return metrics
 
