@@ -70,7 +70,7 @@ def find_closest_passenger(sex, pclass, age):
     # Retourner 1 si moyenne >= 0.5, sinon 0
     return 1 if survival_mean >= 0.5 else 0
 
-def generate_normal_titanic_ml(n=20):
+def generate_normal_titanic_ml(n=100):
     """
     Génère des prédictions Titanic ML qui SUIVENT la distribution de référence.
     Inputs : générés selon les distributions réelles
@@ -111,11 +111,11 @@ def generate_normal_titanic_ml(n=20):
         except Exception as e:
             print(f"  ✗ Exception: {e}")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     print(f"  → {n} prédictions normales générées")
 
-def generate_normal_titanic_dl(n=15):
+def generate_normal_titanic_dl(n=80):
     """
     Génère des prédictions Titanic DL qui SUIVENT la distribution de référence.
     Inputs : générés selon les distributions réelles
@@ -154,11 +154,11 @@ def generate_normal_titanic_dl(n=15):
         except Exception as e:
             print(f"  ✗ Exception: {e}")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     print(f"  → {n} prédictions normales générées")
 
-def generate_normal_unemployment(n=15):
+def generate_normal_unemployment(n=70):
     """Génère des prédictions Unemployment normales (distribution mondiale)"""
     print(f"\n[NORMAL DATA] Generating {n} Unemployment predictions (no drift expected)...")
 
@@ -208,11 +208,11 @@ def generate_normal_unemployment(n=15):
         except Exception as e:
             print(f"  ✗ Exception: {e}")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     print(f"  → {n} prédictions normales générées")
 
-def generate_drifted_titanic_ml(n=20):
+def generate_drifted_titanic_ml(n=100):
     """
     Génère des prédictions avec DRIFT VOLONTAIRE.
     → Seulement des femmes de 1ère classe, jeunes
@@ -249,11 +249,11 @@ def generate_drifted_titanic_ml(n=20):
         except Exception as e:
             print(f"  ✗ Exception: {e}")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     print(f"  → {n} prédictions DRIFTÉES générées")
 
-def generate_drifted_unemployment(n=15):
+def generate_drifted_unemployment(n=70):
     """Génère des prédictions Unemployment avec drift (seulement France, années récentes)"""
     print(f"\n[DRIFT DATA] Generating {n} Unemployment predictions (DRIFT expected)...")
     print("  🚨 Distribution anormale : 100% France, 100% 2023")
@@ -278,7 +278,7 @@ def generate_drifted_unemployment(n=15):
         except Exception as e:
             print(f"  ✗ Exception: {e}")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
     print(f"  → {n} prédictions DRIFTÉES générées")
 
@@ -326,9 +326,9 @@ if __name__ == "__main__":
         print("\n" + "="*70)
         print("PHASE 1 : DONNÉES NORMALES")
         print("="*70)
-        generate_normal_titanic_ml(20)
-        generate_normal_titanic_dl(15)
-        generate_normal_unemployment(15)
+        generate_normal_titanic_ml(100)
+        generate_normal_titanic_dl(80)
+        generate_normal_unemployment(70)
 
         print("\n" + "="*70)
         print("PHASE 1 TERMINÉE")
@@ -344,8 +344,8 @@ if __name__ == "__main__":
         print("\n" + "="*70)
         print("PHASE 2 : DONNÉES DRIFTÉES")
         print("="*70)
-        generate_drifted_titanic_ml(20)
-        generate_drifted_unemployment(15)
+        generate_drifted_titanic_ml(100)
+        generate_drifted_unemployment(70)
 
         print("\n" + "="*70)
         print("PHASE 2 TERMINÉE")
@@ -364,9 +364,9 @@ if __name__ == "__main__":
 
         # Phase 1
         print("\n[PHASE 1] Génération données NORMALES...")
-        generate_normal_titanic_ml(20)
-        generate_normal_titanic_dl(15)
-        generate_normal_unemployment(15)
+        generate_normal_titanic_ml(100)
+        generate_normal_titanic_dl(80)
+        generate_normal_unemployment(70)
 
         print("\n[WAITING] Attente de 16 minutes pour le prochain run du scheduler...")
         print("  (Vous pouvez suivre les logs : docker-compose logs -f drift-monitor)")
@@ -379,8 +379,8 @@ if __name__ == "__main__":
 
         # Phase 2
         print("\n[PHASE 2] Génération données DRIFTÉES...")
-        generate_drifted_titanic_ml(20)
-        generate_drifted_unemployment(15)
+        generate_drifted_titanic_ml(100)
+        generate_drifted_unemployment(70)
 
         print("\n" + "="*70)
         print("TEST COMPLET TERMINÉ")
