@@ -10,3 +10,4 @@ xgboost
 prometheus_fastapi_instrumentator
 sqlalchemy
 evidently
+mlflow
